@@ -44,10 +44,18 @@ async function generateImage(prompt) {
   };
 }
 
+async function listModels() {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+  const text = await response.text();
+  if (!response.ok) throw new Error(`Gemini ${response.status}: ${text}`);
+  return JSON.parse(text);
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'OPTIONS') return json(res, 204, {});
     if (req.url === '/health') return json(res, 200, { ok: true, model });
+    if (req.url === '/models') return json(res, 200, await listModels());
     if (req.url !== '/generate' || req.method !== 'POST') return json(res, 404, { error: 'Not found' });
     if (!apiKey) return json(res, 500, { error: 'Missing GEMINI_API_KEY' });
 
